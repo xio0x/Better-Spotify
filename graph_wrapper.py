@@ -3,7 +3,7 @@
 # It lets the backend safely use the graph without changing Aram’s original implementation.
 
 from typing import List, Dict, Optional
-import CMPSC462FinalProjectGraph as ag  # Aram's graph file must be present for this to work
+import CMPSC462FinalProjctGraph as ag  # Aram's graph file must be present for this to work
 import time
 
 # Create one shared instance of the graph.
