@@ -237,4 +237,116 @@ class genreGraph:
         score.pop(artistName)
         #got help with dictionary sorting from geeksforgeeks: https://www.geeksforgeeks.org/python/sort-python-dictionary-by-value/
         score = {key: value for key, value in sorted(score.items(),key=lambda item: item[1], reverse=True)}
+
         return(score)
+
+################################################################################
+# Class name: genreGraph
+#
+# Author: Xiomara Mohamed
+#
+# Date: 11/12/2025
+#
+# Description:
+# this graph stores genres as nodes that point to the artist nodes within those genres
+# it also has a reversegraph where artists point to their genres
+#
+# Methods:
+#     findNeighborGenres:
+#         computes direct genre relationships by identifying genres that share common 
+#        artists with a given genre and ranking them by the number of shared artists.
+#
+#    findArtistPath:
+#        performs a breadth-first search over the artist–genre graph to find a connection 
+#       path between two artists through shared genres and intermediate artists.
+#
+################################################################################
+
+
+    # finds genres that directly share artists with the given genre
+    # returns a dictionary {genre_name: number_of_shared_artists}
+    def findNeighborGenres(self, genreName):
+        # make sure the genre exists
+        if genreName not in self.graph:
+            return {}
+
+        artists_in_genre = set(self.graph[genreName])
+        neighbor_scores = {}
+
+        # for each artist in this genre, check their other genres
+        for artist in artists_in_genre:
+            artist_genres = self.reversegraph.get(artist, [])
+
+            for g in artist_genres:
+                if g == genreName:
+                    continue
+
+                if g in neighbor_scores:
+                    neighbor_scores[g] += 1
+                else:
+                    neighbor_scores[g] = 1
+
+        # sort by shared artist count (highest first)
+        neighbor_scores = {
+            key: value
+            for key, value in sorted(
+                neighbor_scores.items(),
+                key=lambda item: item[1],
+                reverse=True
+            )
+        }
+
+        return neighbor_scores
+
+
+    # finds a connection path between two artists using shared genres
+    # returns a path like:
+    # [artistA, genre1, artistX, genre2, artistB]
+    def findArtistPath(self, startArtist, endArtist, maxDepth=4):
+
+        # check that both artists exist
+        if startArtist not in self.reversegraph or endArtist not in self.reversegraph:
+            return []
+
+        if startArtist == endArtist:
+            return [startArtist]
+
+        from collections import deque
+
+        queue = deque()
+        queue.append((startArtist, [startArtist], 0))
+
+        visitedArtists = set([startArtist])
+        visitedGenres = set()
+
+        while queue:
+            currentArtist, currentPath, currentDepth = queue.popleft()
+
+            if currentDepth >= maxDepth:
+                continue
+
+            currentGenres = self.reversegraph.get(currentArtist, [])
+
+            for genre in currentGenres:
+                if genre in visitedGenres:
+                    continue
+
+                visitedGenres.add(genre)
+
+                neighborArtists = self.graph.get(genre, [])
+
+                for neighborArtist in neighborArtists:
+                    if neighborArtist == currentArtist:
+                        continue
+
+                    newPath = currentPath + [genre, neighborArtist]
+
+                    if neighborArtist == endArtist:
+                        return newPath
+
+                    if neighborArtist not in visitedArtists:
+                        visitedArtists.add(neighborArtist)
+                        queue.append((neighborArtist, newPath, currentDepth + 1))
+
+        return []
+
